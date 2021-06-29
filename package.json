@@ -1,0 +1,25 @@
+{
+  "name": "heyjoo_discordbot",
+  "version": "1.0.0",
+  "description": "A simple discord bot called Hyejoo",
+  "main": "index.js",
+  "dependencies": {
+    "discord.js": "^12.5.3",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "node .": "node run index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Emanuel-git/discord_bot_hyejoo.git"
+  },
+  "author": "José Emanuel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Emanuel-git/discord_bot_hyejoo/issues"
+  },
+  "homepage": "https://github.com/Emanuel-git/discord_bot_hyejoo#readme"
+}
