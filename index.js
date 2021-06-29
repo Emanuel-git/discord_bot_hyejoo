@@ -14,22 +14,26 @@ const app = express()
 const Discord = require("discord.js") // Conexão com a biblioteca Discord.js
 const client = new Discord.Client() // Criação de um novo Client
 const config = require("./config.json") // Pegando o token e o prefixo do bot para respostas de comandos
-const { channel } = require('diagnostic_channel')
+
+client.on("ready", () => {
+    console.log('Conectado ao servidor discord')
+})
 
 client.on("message", message => {
     if (message.author.bot) return
-    if (message.channel.type == "dm") return
+    if (message.channel.type == "dm") console.log("dm: " + message.content)
     if (!message.content.toLowerCase().startsWith(config.prefix)) return
-    // if (message.content.startsWith(`<@!${client.user.id}>`)) || message.content.startsWith(`<@${client.user.id}>`) return
+    console.log("message.content: " + message.content)
 
     const args = message.content
         .trim()
         .slice(config.prefix.length)
         .split(/ +/g)
-
-    console.log(args)
+    console.log("args: " + args)
 
     const cmd = args.shift().toLowerCase()
+    console.log('command: ' + cmd)
+    console.log('args: ' + args)
 
     try {
         const cmdFile = require(`./commands/${cmd}.js`)
