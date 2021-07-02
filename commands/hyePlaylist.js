@@ -12,14 +12,19 @@ module.exports.run = async (client, message, args) => {
 
     song = JSON.parse(`{ "name": "${song}" }`)
 
-    fs.readFile('hyePlaylist.json', function(err, content) {
+    message.delete().catch(m => {})
+
+    fs.readFile('./commands/hyePlaylist.json', function(err, content) {
         if (err) throw err
 
         let parseJson = JSON.parse(content)
         parseJson.songs.push(song)
 
-        fs.writeFile('hyePlaylist.json', JSON.stringify(parseJson), function(err) {
+        fs.writeFile('./commands/hyePlaylist.json', JSON.stringify(parseJson), function(err) {
             if (err) throw err
         })
+
+        message.channel.send(`> ${args.join(' ')} adicionada com sucesso na minha playlist!`)
+
     })
 }
