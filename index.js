@@ -17,11 +17,19 @@ app.get("/", (request, response) => {
 
 client.on('ready', () => {
     console.log('Conectado ao servidor discord')
-    client.user.setActivity('[MV] 이달의 소녀 (LOONA) "PTT (Paint The Town)"', { type: 'WATCHING' })
+
+    const fs = require('fs')
+
+    setInterval(() => {
+        let objSongs = JSON.parse(fs.readFileSync('./commands/hyePlaylist.json'))
+        song = objSongs.songs[objSongs.songs.length * Math.random() << 0]
+        client.user.setActivity(song.name, { type: 'LISTENING' })
+    }, 180000)
+
 })
 
 client.on("guildMemberAdd", member => {
-    
+
 })
 
 client.on("message", message => {
