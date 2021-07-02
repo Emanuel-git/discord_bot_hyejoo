@@ -34,7 +34,10 @@ client.on("guildMemberAdd", member => {
 
 client.on("message", message => {
     if (message.author.bot) return
-    if (message.channel.type == "dm") console.log(message.author.username + ": " + message.content)
+    if (message.channel.type == "dm") {
+        console.log(message.author.username + ": " + message.content)
+        return
+    } 
     if (!message.content.toLowerCase().startsWith(config.prefix)) return
     console.log("message.content: " + message.content)
 
