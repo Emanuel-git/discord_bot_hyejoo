@@ -1,5 +1,6 @@
 const Discord = require('discord.js')
 const ytdl = require('ytdl-core')
+const ytpl = require('ytpl')
 const { servers } = require('..')
 const ytdlOptions = require('../JSONfiles/config.json').YTDL
 const googleKey = require('../JSONfiles/config.json').GOOGLE_KEY
@@ -10,17 +11,26 @@ const youtube = new google.youtube_v3.Youtube({
     auth: googleKey
 })
 
-const play = message => {
+const play = (message) => {
     if (servers[message.guild.id].isPlaying === false) {
-        const currentSong = servers[message.guild.id].queue[0]
+        const link = servers[message.guild.id].queue[0].link
         servers[message.guild.id].isPlaying = true
 
-        console.log('currentSong: ' + currentSong)
-        console.log('servers[message.guild.id].queue: '+ servers[message.guild.id].queue)
+        const playingMessage
 
-        servers[message.guild.id].dispatcher = servers[message.guild.id].connection.play(ytdl(currentSong, ytdlOptions))
+        const embed = new Discord.MessageEmbed()
+            .setTitle('Now playing ' + servers[message.guild.id].queue[0].name)
+        
+        message.channel.send(embed).then(m => playingMessage = m)
+
+        console.log('link: ' + link)
+        console.log('name: ' + servers[message.guild.id].queue[0].name)
+        console.log('channel: ' + servers[message.guild.id].queue[0].channel)
+
+        servers[message.guild.id].dispatcher = servers[message.guild.id].connection.play(ytdl(link, ytdlOptions))
 
         servers[message.guild.id].dispatcher.on('finish', () => {
+            playingMessage.delete()
             servers[message.guild.id].queue.shift()
             servers[message.guild.id].isPlaying = false
             
@@ -52,37 +62,69 @@ module.exports.run = async (client, message, args) => {
         return
     }
 
-    if (ytdl.validateURL(song)) {
-        console.log('Pelo link: ' + song)
-        servers[message.guild.id].queue.push(song)
-        play(message)
+    if (ytpl.validateID(song)) {
+        ytpl.getPlaylistID(song)
+            .then(playlist => ytpl(playlist, { pages: 1 }))
+            .then(p => {
+                let count = 0
+                p.items.forEach(i => {
+                    count++
+                    servers[message.guild.id].queue.push(
+                        {
+                            link: i.shortUrl,
+                            name: i.title, 
+                            channel: i.author.name
+                        }
+                        )
+                })
+                message.channel.send(count + ' músicas foram adicionadas a fila')
+                play(message)
+            })
+    }
+    else if (ytdl.validateURL(song)) {
+        // servers[message.guild.id].queue.push(song)
+        // play(message)
+        youtube.search.list({
+            q: song,
+            part: 'snippet',
+            fields: 'items(id(videoId), snippet(title, channelTitle))',
+            type: 'video',
+            maxResults: 1
+        }, (err, result) => {
+            if (err) console.log(err)
+            else {
+                servers[message.guild.id].queue.push(
+                    {
+                        link: 'https://www.youtube.com/watch?v=' + result.data.items[0].id.videoId,
+                        name: result.data.items[0].snippet.title, 
+                        channel: result.data.items[0].snippet.channelTitle
+                    }
+                    )
+                
+                play(message)
+            }
+        })
     }
     else {
         youtube.search.list({
             q: song,
             part: 'snippet',
             fields: 'items(id(videoId), snippet(title, channelTitle))',
-            type: 'video'
+            type: 'video',
         }, (err, result) => {
             if (err) console.log(err)
             else {
-                // const id = resultado.data.items[0].id.videoId
-                // song = 'https://www.youtube.com/watch?v=' + id
-                // console.log('Pela pesquisa: ' + song)
-                // servers[message.guild.id].queue.push(song)
-                // play()
-
                 const resultList = []
 
-                for (let i in result.data.items) {
+                result.data.items.forEach(item => {
                     const createItem = {
-                        'videoTitle': result.data.items[i].snippet.title,
-                        'channelName': result.data.items[i].snippet.channelTitle,
-                        'id': 'https://www.youtube.com/watch?v=' + result.data.items[i].id.videoId
+                        'videoTitle': item.snippet.title,
+                        'channelName': item.snippet.channelTitle,
+                        'id': 'https://www.youtube.com/watch?v=' + item.id.videoId
                     }
 
                     resultList.push(createItem)
-                }
+                })
 
                 const embed = new Discord.MessageEmbed()
                     .setColor('#0000ff')
@@ -100,9 +142,7 @@ module.exports.run = async (client, message, args) => {
                     .then(embedMessage => {
                         const reactions  = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
-                        for (let i = 0; i < reactions.length; i++) {
-                            embedMessage.react(reactions[i])
-                        }
+                        reactions.forEach(reaction => embedMessage.react(reaction))
 
                         const filter = (reaction, user) => {
                             return reactions.includes(reaction.emoji.name)
@@ -120,7 +160,14 @@ module.exports.run = async (client, message, args) => {
                                     + resultList[idChosenOption].channelName + '```'
                                 )
 
-                                servers[message.guild.id].queue.push(resultList[idChosenOption].id)
+                                servers[message.guild.id].queue.push(
+                                {
+                                    link: resultList[idChosenOption].id,
+                                    name: resultList[idChosenOption].videoTitle, 
+                                    channel: resultList[idChosenOption].channelName
+                                }
+                                )
+
                                 play(message)
                             }).catch(error => {
                                 message.reply('Você não escolheu uma opção válida!')
