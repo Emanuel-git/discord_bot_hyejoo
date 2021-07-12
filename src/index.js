@@ -15,9 +15,7 @@ app.get("/", (request, response) => {
     response.sendStatus(200)
 })
 
-const servers = []
-
-exports.servers = servers
+const servers = []; exports.servers = servers
 
 client.on('guildCreate', guild => {
     console.log('Id da guilda onde eu entrei: ' + guild.id)
@@ -39,18 +37,28 @@ client.on('ready', () => {
 
     console.log('Hyejoo conectada ao servidor discord')
 
-    const fs = require('fs')
-
-    // setInterval(() => {
-    //     let objSongs = JSON.parse(fs.readFileSync('./commands/hyePlaylist.json'))
-    //     song = objSongs.songs[objSongs.songs.length * Math.random() << 0]
-    //     client.user.setActivity(song.name, { type: 'LISTENING' })
-    // }, 180000)
-
 })
 
 client.on('guildMemberAdd', member => {
-
+    const embed = new Discord.MessageEmbed()
+        .setColor('#0000ff')
+        .setTitle(`Bem vindo, ${member.user.username}#${member.user.discriminator}`)
+        .setAuthor(member.guild.name, `https://cdn.discordapp.com/icons/${member.guild.id}/${member.guild.icon}.png`)
+        .setThumbnail(
+            member.user.avatar
+            ? `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`
+            : `https://cdn.discordapp.com/embed/avatars/${member.user.discriminator % 5}.png`
+            )
+        .addFields({
+            name: 'Você é o membro nº',
+            value: member.guild.memberCount,
+            inline: true
+        })
+        .setTimestamp()
+    
+    const a = member.guild.channels.cache.get('861423679920930816')
+    console.log(a.name)
+    a.send(embed)
 })
 
 client.on('message', message => {
@@ -77,7 +85,7 @@ client.on('message', message => {
         cmdFile.run(client, message, args)
     }
     catch (e) {
-        message.channel.send('> Erro: ' + e)
+        message.channel.send('> Não encontrei este comando :(')
     }
 })
 
