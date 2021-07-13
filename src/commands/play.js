@@ -11,17 +11,17 @@ const youtube = new google.youtube_v3.Youtube({
     auth: googleKey
 })
 
+const formatVideoName = name => name
+                                    .replace(/&quot;/g, '"')
+                                    .replace(/&#39;/g, "'")
+                                    .replace(/&amp;/g, '&')
+                                    
 const play = (message) => {
     if (servers[message.guild.id].isPlaying === false) {
         const link = servers[message.guild.id].queue[0].link
         servers[message.guild.id].isPlaying = true
 
-        const playingMessage
-
-        const embed = new Discord.MessageEmbed()
-            .setTitle('Now playing ' + servers[message.guild.id].queue[0].name)
-        
-        message.channel.send(embed).then(m => playingMessage = m)
+        // const playingMessage
 
         console.log('link: ' + link)
         console.log('name: ' + servers[message.guild.id].queue[0].name)
@@ -29,8 +29,14 @@ const play = (message) => {
 
         servers[message.guild.id].dispatcher = servers[message.guild.id].connection.play(ytdl(link, ytdlOptions))
 
+        const embed = new Discord.MessageEmbed()
+            .setDescription('Now playing ' + servers[message.guild.id].queue[0].name)
+
+        message.channel.send(embed).then(m => playingMessage = m)
+
         servers[message.guild.id].dispatcher.on('finish', () => {
             playingMessage.delete()
+            
             servers[message.guild.id].queue.shift()
             servers[message.guild.id].isPlaying = false
             
@@ -54,8 +60,9 @@ module.exports.run = async (client, message, args) => {
 
     if (servers[message.guild.id].connection === null) {
         servers[message.guild.id].connection = await message.member.voice.channel.join()
+            // .then(connection => connection.voice.setSelfDeaf(true))
     }
-    
+    servers[message.guild.id].connection.voice.setSelfDeaf(true)
 
     if (song.trim().length === 0) {
         message.channel.send('```- Eu preciso de algo pra tocar!```')
@@ -72,7 +79,7 @@ module.exports.run = async (client, message, args) => {
                     servers[message.guild.id].queue.push(
                         {
                             link: i.shortUrl,
-                            name: i.title, 
+                            name: formatVideoName(i.title), 
                             channel: i.author.name
                         }
                         )
@@ -96,7 +103,7 @@ module.exports.run = async (client, message, args) => {
                 servers[message.guild.id].queue.push(
                     {
                         link: 'https://www.youtube.com/watch?v=' + result.data.items[0].id.videoId,
-                        name: result.data.items[0].snippet.title, 
+                        name: formatVideoName(result.data.items[0].snippet.title), 
                         channel: result.data.items[0].snippet.channelTitle
                     }
                     )
@@ -118,7 +125,7 @@ module.exports.run = async (client, message, args) => {
 
                 result.data.items.forEach(item => {
                     const createItem = {
-                        'videoTitle': item.snippet.title,
+                        'videoTitle': formatVideoName(item.snippet.title),
                         'channelName': item.snippet.channelTitle,
                         'id': 'https://www.youtube.com/watch?v=' + item.id.videoId
                     }
@@ -127,7 +134,6 @@ module.exports.run = async (client, message, args) => {
                 })
 
                 const embed = new Discord.MessageEmbed()
-                    .setColor('#0000ff')
                     .setAuthor('Hyejoo')
                     .setDescription('Escolha sua música de 1-5!')
 
@@ -138,7 +144,7 @@ module.exports.run = async (client, message, args) => {
                     )
                 }
 
-                message.channel.send(embed)
+                message.lineReplyNoMention(embed)
                     .then(embedMessage => {
                         const reactions  = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣']
 
@@ -163,7 +169,7 @@ module.exports.run = async (client, message, args) => {
                                 servers[message.guild.id].queue.push(
                                 {
                                     link: resultList[idChosenOption].id,
-                                    name: resultList[idChosenOption].videoTitle, 
+                                    name: formatVideoName(resultList[idChosenOption].videoTitle), 
                                     channel: resultList[idChosenOption].channelName
                                 }
                                 )

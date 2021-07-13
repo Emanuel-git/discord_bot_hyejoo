@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const Discord = require("discord.js") // Conexão com a biblioteca Discord.js
+require('discord-reply')
 const client = new Discord.Client() // Criação de um novo Client
 const config = require("./JSONfiles/config.json") // Pegando o token e o prefixo do bot para respostas de comandos
 const fs = require('fs')
@@ -61,6 +62,7 @@ client.on('guildMemberAdd', member => {
     a.send(embed)
 })
 
+
 client.on('message', message => {
     if (message.author.bot) return
     if (message.channel.type == "dm") {
@@ -85,7 +87,8 @@ client.on('message', message => {
         cmdFile.run(client, message, args)
     }
     catch (e) {
-        message.channel.send('> Não encontrei este comando :(')
+        if (e.code === 'MODULE_NOT_FOUND') message.channel.send('> Este comando não existe!')
+        else console.log(e)
     }
 })
 

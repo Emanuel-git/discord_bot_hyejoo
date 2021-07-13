@@ -23,7 +23,7 @@ module.exports.run = (client, message, args) => {
             .addField('Author', trackAuthor, false)
             .addField('Listen to track:', `[\`${trackURL}\`](trackURL)`, false)
 
-            message.channel.send(embed)
+            message.lineReplyNoMention(embed)
 
     } else {
         message.channel.send('> Este usuário não está ouvindo Spotify')
