@@ -5,16 +5,14 @@ const { servers } = require('..')
 const ytdlOptions = require('../JSONfiles/config.json').YTDL
 const googleKey = require('../JSONfiles/config.json').GOOGLE_KEY
 const google = require('googleapis')
+const { getTracks } = require('spotify-url-info')
 
 const youtube = new google.youtube_v3.Youtube({
     version: 'v3',
     auth: googleKey
 })
 
-const formatVideoName = name => name
-                                    .replace(/&quot;/g, '"')
-                                    .replace(/&#39;/g, "'")
-                                    .replace(/&amp;/g, '&')
+const formatVideoName = name => name.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
                                     
 const play = (message) => {
     if (servers[message.guild.id].isPlaying === false) {
@@ -30,7 +28,7 @@ const play = (message) => {
         servers[message.guild.id].dispatcher = servers[message.guild.id].connection.play(ytdl(link, ytdlOptions))
 
         const embed = new Discord.MessageEmbed()
-            .setDescription('Now playing ' + servers[message.guild.id].queue[0].name)
+            .setDescription('Now playing ' + servers[message.guild.id].queue[0].channel + ' - ' + servers[message.guild.id].queue[0].name)
 
         message.channel.send(embed).then(m => playingMessage = m)
 
@@ -60,16 +58,57 @@ module.exports.run = async (client, message, args) => {
 
     if (servers[message.guild.id].connection === null) {
         servers[message.guild.id].connection = await message.member.voice.channel.join()
-            // .then(connection => connection.voice.setSelfDeaf(true))
+        servers[message.guild.id].connection.voice.setSelfDeaf(true)
     }
-    servers[message.guild.id].connection.voice.setSelfDeaf(true)
-
+    
     if (song.trim().length === 0) {
         message.channel.send('```- Eu preciso de algo pra tocar!```')
         return
     }
 
-    if (ytpl.validateID(song)) {
+    // if the link is from a spotify track or playlist
+    if (/^(spotify:|https:\/\/[a-z]+\.spotify\.com\/)/.test(song)) {
+        getTracks(song)
+            .then(data => {
+                let count = 0
+                data.forEach(song => {
+                    count++
+                    const query = song.name + ' ' + song.artists[0].name 
+                    console.log('query: ' + query) 
+                    youtube.search.list({
+                        q: query,
+                        part: 'snippet',
+                        fields: 'items(id(videoId), snippet(title, channelTitle))',
+                        type: 'video',
+                        maxResults: 1
+                    }, (err, result) => {
+                        if (err) console.log(err)
+                        else {
+                            servers[message.guild.id].queue.push(
+                                {
+                                    link: 'https://www.youtube.com/watch?v=' + result.data.items[0].id.videoId,
+                                    name: song.name, 
+                                    channel: song.artists[0].name
+                                }
+                                )
+                            
+                            play(message)
+                        }
+                    })
+                })
+                if (count > 1) message.channel.send(new Discord.MessageEmbed()
+                                                        .setDescription(`${count} songs are added to the queue!`))
+                else {
+                    if (servers[message.guild.id].queue.length > 0) {
+                        message.channel.send(new Discord.MessageEmbed()
+                                                .setDescription(`${data[0].artists[0].name} - ${data[0].name} added to the queue!`))
+                    }
+                }
+        })
+    }
+
+    // if the link is from a youtube playlist
+    else if (ytpl.validateID(song)) {
         ytpl.getPlaylistID(song)
             .then(playlist => ytpl(playlist, { pages: 1 }))
             .then(p => {
@@ -84,13 +123,14 @@ module.exports.run = async (client, message, args) => {
                         }
                         )
                 })
-                message.channel.send(count + ' músicas foram adicionadas a fila')
+                message.channel.send(new Discord.MessageEmbed()
+                                        .setDescription(`${count} songs are added to the queue!`))
                 play(message)
             })
     }
+
+    // if the link is from a youtube video
     else if (ytdl.validateURL(song)) {
-        // servers[message.guild.id].queue.push(song)
-        // play(message)
         youtube.search.list({
             q: song,
             part: 'snippet',
@@ -106,12 +146,19 @@ module.exports.run = async (client, message, args) => {
                         name: formatVideoName(result.data.items[0].snippet.title), 
                         channel: result.data.items[0].snippet.channelTitle
                     }
-                    )
+                )
                 
+                if (servers[message.guild.id].queue.length > 0) {
+                    message.channel.send(new Discord.MessageEmbed()
+                                            .setDescription(`${formatVideoName(result.data.items[0].snippet.title)} added to the queue!`))
+                }
+
                 play(message)
             }
         })
     }
+
+    // if the user wants to search for a song
     else {
         youtube.search.list({
             q: song,

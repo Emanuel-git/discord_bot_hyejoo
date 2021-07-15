@@ -26,6 +26,6 @@ module.exports.run = (client, message, args) => {
             message.lineReplyNoMention(embed)
 
     } else {
-        message.channel.send('> Este usuário não está ouvindo Spotify')
+        message.lineReplyNoMention('> Este usuário não está ouvindo Spotify')
     }
 }
