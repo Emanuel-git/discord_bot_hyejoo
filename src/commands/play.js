@@ -207,11 +207,16 @@ module.exports.run = async (client, message, args) => {
                                 const reaction = collected.first()
                                 const idChosenOption = reactions.indexOf(reaction.emoji.name)
 
-                                message.channel.send(
-                                    '```Você escolheu '
-                                    + resultList[idChosenOption].videoTitle + ' de '
-                                    + resultList[idChosenOption].channelName + '```'
-                                )
+                                // message.channel.send(
+                                //     '```Você escolheu '
+                                //     + resultList[idChosenOption].videoTitle + ' de '
+                                //     + resultList[idChosenOption].channelName + '```'
+                                // )
+
+                                if (servers[message.guild.id].queue.length > 0) {
+                                    message.channel.send(new Discord.MessageEmbed()
+                                                            .setDescription(`${resultList[idChosenOption].videoTitle} added to the queue!`))
+                                }
 
                                 servers[message.guild.id].queue.push(
                                 {

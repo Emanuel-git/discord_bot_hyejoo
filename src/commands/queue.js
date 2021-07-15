@@ -6,16 +6,9 @@ module.exports.run = async (client, message, args) => {
         .setAuthor('Hyejoo')
         .setDescription('Fila:')
 
-    // servers[message.guild.id].queue.forEach(song => {
-    //     embed.addField(
-    //         song.name,
-    //         song.channel
-    //         ) 
-    // });
-
     for (let i in servers[message.guild.id].queue) {
         embed.addField(
-            `${parseInt(i) + 1}. ${servers[message.guild.id].queue[i].name}`,
+            `${parseInt(i) + 1}. ${parseInt(i) === 0 ? '(playing now)' : ''} ${servers[message.guild.id].queue[i].name}`,
             servers[message.guild.id].queue[i].channel
         )
     }
