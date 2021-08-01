@@ -1,2 +1,3 @@
 node_modules
-src/JSONfiles
+botConfig/config.json
+botConfig/serverList.json

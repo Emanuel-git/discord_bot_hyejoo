@@ -5,18 +5,18 @@
   "main": "src/index.js",
   "dependencies": {
     "@discordjs/opus": "^0.5.3",
+    "ascii-table": "0.0.9",
     "discord-reply": "^0.1.2",
     "discord.js": "^12.5.3",
+    "distube": "^2.8.15",
     "express": "^4.17.1",
-    "googleapis": "^80.1.0",
     "spotify-url-info": "^2.2.3",
-    "ytdl-core": "^4.8.3",
-    "ytpl": "^2.2.1"
+    "ytdl-core": "^4.9.0"
   },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    ".": "node run ./src/index.js"
+    ".": "node run index.js"
   },
   "repository": {
     "type": "git",
