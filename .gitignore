@@ -1,3 +1,2 @@
 node_modules
-botConfig/config.json
-botConfig/serverList.json
+.env

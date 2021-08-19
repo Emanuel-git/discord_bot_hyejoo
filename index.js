@@ -1,6 +1,7 @@
-const Discord = require('discord.js')
-require('discord-reply')
-const fs = require('fs')
+const Discord = require('discord.js');
+require('discord-reply');
+const fs = require('fs');
+require('dotenv').config();
 
 const client = new Discord.Client({
     messageCacheLifetime: 60,
@@ -28,4 +29,4 @@ handlers()
 
 module.exports.handlers = handlers
 
-client.login(require('./botConfig/config.json').TOKEN)
+client.login(process.env.TOKEN);
