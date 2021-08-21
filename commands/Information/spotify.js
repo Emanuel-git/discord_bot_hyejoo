@@ -1,5 +1,4 @@
 const { MessageEmbed } = require('discord.js')
-const config = require('../../botConfig/config.json')
 const ee = require('../../botConfig/embed.json')
 module.exports = {
     name: 'spotify',
